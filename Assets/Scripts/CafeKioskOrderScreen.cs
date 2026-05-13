@@ -93,43 +93,75 @@ public sealed class CafeKioskOrderScreen
         // [오른쪽] 주문 내역(장바구니) 영역
         var right = CafeKioskUIUtility.Panel("Order Area", content, paper);
         CafeKioskUIUtility.Anchor(right, 0.66f, 0f, 1f, 1f, 12f, 0f, 0f, 0f);
+        BuildOrderArea(right, onCheckout, onAction);
+    }
 
-        var orderTitle = CafeKioskUIUtility.Label("주문 내역", right, 28, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft, font);
-        CafeKioskUIUtility.Anchor(orderTitle.rectTransform, 0f, 0.88f, 1f, 1f, 22f, 0f, -22f, -12f);
+    // 장바구니 영역의 레이아웃을 구성하는 함수
+    private void BuildOrderArea(RectTransform container, System.Action onCheckout, System.Action onAction)
+    {
+        // 수직 레이아웃 그룹 설정 (간격과 패딩을 최소화하여 리스트 공간 확보)
+        var layout = container.gameObject.AddComponent<VerticalLayoutGroup>();
+        layout.padding = new RectOffset(22, 22, 12, 6); 
+        layout.spacing = 8f; // 간격을 14에서 8로 축소
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandWidth = true;
+        layout.childForceExpandHeight = false;
 
-        // 장바구니 리스트 스크롤 영역
-        var cartScroll = CafeKioskUIUtility.ScrollArea("Cart Scroll", right);
-        CafeKioskUIUtility.Anchor(cartScroll.viewport, 0f, 0.24f, 1f, 0.88f, 18f, 4f, -18f, -8f);
+        // 1. 주문 내역 타이틀 (높이 축소)
+        var orderTitle = CafeKioskUIUtility.Label("주문 내역", container, 28, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft, font);
+        orderTitle.gameObject.AddComponent<LayoutElement>().preferredHeight = 42f;
+
+        // 2. 장바구니 리스트 스크롤 영역 (유연한 높이로 설정하여 남는 공간 차지)
+        var cartScroll = CafeKioskUIUtility.ScrollArea("Cart Scroll", container);
+        cartScroll.viewport.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
         cartList = cartScroll.content;
         CafeKioskUIUtility.AddVerticalLayout(cartList, 10, TextAnchor.UpperLeft);
 
-        // 빈 장바구니 안내 텍스트
-        emptyCartText = CafeKioskUIUtility.Label("아직 담긴 메뉴가 없습니다.", right, 18, new Color(0.5f, 0.45f, 0.39f), FontStyle.Normal, TextAnchor.MiddleCenter, font);
+        // 빈 장바구니 안내 텍스트 (레이아웃에서 제외하고 중앙 오버레이로 배치)
+        emptyCartText = CafeKioskUIUtility.Label("아직 담긴 메뉴가 없습니다.", container, 18, new Color(0.5f, 0.45f, 0.39f), FontStyle.Normal, TextAnchor.MiddleCenter, font);
+        var emptyElem = emptyCartText.gameObject.AddComponent<LayoutElement>();
+        emptyElem.ignoreLayout = true;
         CafeKioskUIUtility.Anchor(emptyCartText.rectTransform, 0f, 0.45f, 1f, 0.65f, 20f, 0f, -20f, 0f);
 
-        // 합계 금액 표시
-        totalText = CafeKioskUIUtility.Label("합계 0원", right, 30, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft, font);
-        CafeKioskUIUtility.Anchor(totalText.rectTransform, 0f, 0.14f, 1f, 0.24f, 22f, 0f, -22f, 0f);
+        // 3. 합계 금액 표시 영역 (높이 축소)
+        totalText = CafeKioskUIUtility.Label("합계 0원", container, 30, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft, font);
+        totalText.gameObject.AddComponent<LayoutElement>().preferredHeight = 50f;
 
-        // 하단 액션 버튼 영역 (비우기, 결제하기)
-        var actions = CafeKioskUIUtility.Panel("Actions", right, new Color(0f, 0f, 0f, 0f));
-        CafeKioskUIUtility.Anchor(actions, 0f, 0.02f, 1f, 0.14f, 18f, 0f, -18f, 0f);
-        CafeKioskUIUtility.AddHorizontalLayout(actions, 12, TextAnchor.MiddleCenter);
+        // 4. 하단 액션 버튼 영역 (높이 축소)
+        var actions = CafeKioskUIUtility.Panel("Actions", container, new Color(0f, 0f, 0f, 0f));
+        actions.gameObject.AddComponent<LayoutElement>().preferredHeight = 58f;
         
-        CafeKioskUIUtility.Button("비우기", actions, 18, new Color(0.42f, 0.38f, 0.34f), Color.white, () => {
+        // 버튼의 너비 제어권을 레이아웃 그룹이 가지도록 설정
+        var hLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
+        hLayout.spacing = 12f;
+        hLayout.childAlignment = TextAnchor.MiddleCenter;
+        hLayout.childControlWidth = true;   
+        hLayout.childControlHeight = false; 
+        hLayout.childForceExpandWidth = false;
+        hLayout.childForceExpandHeight = false;
+        
+        var clearBtn = CafeKioskUIUtility.Button("비우기", actions, 18, new Color(0.42f, 0.38f, 0.34f), Color.white, () => {
             viewModel.ClearCart();
             RefreshCart();
             onAction?.Invoke();
         }, font, 118f);
+        // 비우기 버튼은 118 고정
+        var clearElem = clearBtn.gameObject.AddComponent<LayoutElement>();
+        clearElem.preferredWidth = 118f;
+        clearElem.flexibleWidth = 0f;
         
-        CafeKioskUIUtility.Button("결제하기", actions, 20, sage, Color.white, () => {
+        var checkoutBtn = CafeKioskUIUtility.Button("결제하기", actions, 20, sage, Color.white, () => {
             if (viewModel.Checkout()) onCheckout?.Invoke();
             onAction?.Invoke();
         }, font, 178f);
+        // 결제하기 버튼이 나머지 공간을 모두 차지
+        var checkoutElem = checkoutBtn.gameObject.AddComponent<LayoutElement>();
+        checkoutElem.flexibleWidth = 1f;
 
-        // 상태 메시지 텍스트 (알림 등)
-        statusText = CafeKioskUIUtility.Label("", right, 17, sage, FontStyle.Bold, TextAnchor.MiddleCenter, font);
-        CafeKioskUIUtility.Anchor(statusText.rectTransform, 0f, 0f, 1f, 0.04f, 20f, 0f, -20f, 0f);
+        // 5. 하단 상태 메시지 텍스트 (높이 축소)
+        statusText = CafeKioskUIUtility.Label("", container, 17, sage, FontStyle.Bold, TextAnchor.MiddleCenter, font);
+        statusText.gameObject.AddComponent<LayoutElement>().preferredHeight = 20f;
     }
 
     // 선택된 카테고리에 맞는 메뉴 아이템 리스트를 갱신
