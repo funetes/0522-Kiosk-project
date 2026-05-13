@@ -73,7 +73,7 @@ public sealed class CafeKioskOrderScreen
         var scroll = CafeKioskUIUtility.ScrollArea("Menu Scroll", left);
         CafeKioskUIUtility.Anchor(scroll.viewport, 0f, 0f, 1f, 0.88f, 14f, 14f, -14f, -8f);
         menuGrid = scroll.content;
-        CafeKioskUIUtility.AddGrid(menuGrid, new Vector2(245f, 208f), new Vector2(14f, 14f), new RectOffset(0, 0, 0, 0));
+        CafeKioskUIUtility.AddGrid(menuGrid, new Vector2(245f, 250f), new Vector2(14f, 14f), new RectOffset(0, 0, 0, 0));
 
         // Right Order Area
         var right = CafeKioskUIUtility.Panel("Order Area", content, paper);
@@ -132,6 +132,9 @@ public sealed class CafeKioskOrderScreen
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
+            var fitter = card.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.MinSize;
+
             Thumbnail(item, card);
             CafeKioskUIUtility.Label(item.Name, card, 22, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft, font);
             CafeKioskUIUtility.Label(item.Description, card, 15, new Color(0.42f, 0.38f, 0.32f), FontStyle.Normal, TextAnchor.MiddleLeft, font);
@@ -142,8 +145,10 @@ public sealed class CafeKioskOrderScreen
             }, font, 0f, 38f);
         }
 
-        var rows = Mathf.CeilToInt(Mathf.Max(1, visibleItems.Count) / 3f);
-        menuGrid.sizeDelta = new Vector2(menuGrid.sizeDelta.x, Mathf.Max(1, rows) * 222f);
+        var grid = menuGrid.GetComponent<GridLayoutGroup>();
+        var rowHeight = grid.cellSize.y + grid.spacing.y;
+        var rows = Mathf.CeilToInt(Mathf.Max(1, visibleItems.Count) / (float)grid.constraintCount);
+        menuGrid.sizeDelta = new Vector2(menuGrid.sizeDelta.x, rows * rowHeight);
         LayoutRebuilder.ForceRebuildLayoutImmediate(menuGrid);
     }
 
