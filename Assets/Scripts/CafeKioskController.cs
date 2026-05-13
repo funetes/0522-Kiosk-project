@@ -71,7 +71,12 @@ public sealed class CafeKioskController : MonoBehaviour
         );
 
         optionPopupUI = new CafeKioskOptionPopup(root, viewModel, font, paper, charcoal, sage, espresso, caramel, 
-            () => RefreshScreens()
+            () =>
+            {
+                RefreshScreens();
+                // 옵션매뉴가 있는 아이템의 cart를 주문내역에 업데이트하는 함수를 추가.
+                orderScreenUI.RefreshCart();
+            }
         );
 
         paymentPopupUI = new CafeKioskPaymentPopup(root, viewModel, font, paper, charcoal, sage, espresso, caramel, 
@@ -89,6 +94,7 @@ public sealed class CafeKioskController : MonoBehaviour
     {
         startScreenUI?.Refresh();
         orderScreenUI?.Refresh();
+        
         optionPopupUI?.Refresh();
         paymentPopupUI?.Refresh();
     }
