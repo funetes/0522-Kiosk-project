@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -9,9 +6,7 @@ using UnityEngine.UI;
 [ExecuteAlways]
 public sealed class CafeKioskController : MonoBehaviour
 {
-    private readonly List<MenuItem> menuItems = CafeKioskMenuCatalog.CreateMenu();
-    private readonly List<CartLine> cart = new();
-    private readonly CafeKioskMembershipService membershipService = new();
+    private readonly CafeKioskViewModel viewModel = new();
     private readonly Color cream = new(0.96f, 0.92f, 0.86f);
     private readonly Color charcoal = new(0.12f, 0.11f, 0.1f);
     private readonly Color espresso = new(0.28f, 0.17f, 0.1f);
@@ -33,13 +28,6 @@ public sealed class CafeKioskController : MonoBehaviour
     private Text memberStatusText;
     private Text ticketText;
     private InputField memberPhoneInput;
-    private string selectedCategory = "All";
-    private MenuItem pendingOptionItem;
-    private string selectedTemperature = "ICE";
-    private string selectedSize = "Regular";
-    private string orderMode = "";
-    private int paymentAmount;
-    private int orderNumber = 100;
 
     private void OnEnable()
     {
@@ -94,12 +82,12 @@ public sealed class CafeKioskController : MonoBehaviour
         Anchor(categories, 0f, 0.88f, 1f, 1f, 14f, 8f, -14f, -8f);
         AddHorizontalLayout(categories, 10, TextAnchor.MiddleLeft);
 
-        foreach (var category in new[] { "All", "Coffee", "Ade", "Dessert", "Food" })
+        foreach (var category in viewModel.Categories)
         {
             var captured = category;
-            Button(CategoryLabel(category), categories, 18, caramel, Color.white, () =>
+            Button(CafeKioskViewModel.CategoryLabel(category), categories, 18, caramel, Color.white, () =>
             {
-                selectedCategory = captured;
+                viewModel.SelectCategory(captured);
                 RefreshMenu();
             }, 116f);
         }
@@ -138,13 +126,13 @@ public sealed class CafeKioskController : MonoBehaviour
         CreateOptionOverlay(root);
         CreatePaymentOverlay(root);
         CreateStartScreen(root);
-        orderScreen.gameObject.SetActive(false);
+        RefreshScreens();
     }
 
     private void RefreshMenu()
     {
         ClearChildren(menuGrid);
-        var visibleItems = menuItems.Where(item => selectedCategory == "All" || item.Category == selectedCategory).ToList();
+        var visibleItems = viewModel.VisibleMenuItems;
         if (visibleItems.Count == 0)
         {
             Label("표시할 메뉴가 없습니다.", menuGrid, 22, charcoal, FontStyle.Bold, TextAnchor.MiddleCenter);
@@ -164,7 +152,7 @@ public sealed class CafeKioskController : MonoBehaviour
             Thumbnail(item, card);
             Label(item.Name, card, 22, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft);
             Label(item.Description, card, 15, new Color(0.42f, 0.38f, 0.32f), FontStyle.Normal, TextAnchor.MiddleLeft);
-            Label(MenuPriceText(item), card, 20, caramel, FontStyle.Bold, TextAnchor.MiddleLeft);
+            Label(CafeKioskViewModel.MenuPriceText(item), card, 20, caramel, FontStyle.Bold, TextAnchor.MiddleLeft);
             Button("담기", card, 17, espresso, Color.white, () => StartAddToCart(item), 0f, 38f);
         }
 
@@ -176,10 +164,9 @@ public sealed class CafeKioskController : MonoBehaviour
     private void RefreshCart()
     {
         ClearChildren(cartList);
-        var hasItems = cart.Count > 0;
-        emptyCartText.gameObject.SetActive(!hasItems);
+        emptyCartText.gameObject.SetActive(!viewModel.HasCartItems);
 
-        foreach (var pair in cart.ToList())
+        foreach (var pair in viewModel.Cart)
         {
             var row = Panel(pair.Item.Name, cartList, new Color(0.98f, 0.94f, 0.88f));
             row.sizeDelta = new Vector2(0f, 78f);
@@ -187,112 +174,72 @@ public sealed class CafeKioskController : MonoBehaviour
             var name = Label(pair.DisplayName, row, 16, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft);
             Anchor(name.rectTransform, 0f, 0.45f, 0.54f, 1f, 12f, 0f, 0f, 0f);
 
-            var price = Label(FormatPrice(pair.UnitPrice * pair.Quantity), row, 16, caramel, FontStyle.Bold, TextAnchor.MiddleLeft);
+            var price = Label(CafeKioskViewModel.FormatPrice(pair.UnitPrice * pair.Quantity), row, 16, caramel, FontStyle.Bold, TextAnchor.MiddleLeft);
             Anchor(price.rectTransform, 0f, 0f, 0.54f, 0.48f, 12f, 0f, 0f, 0f);
 
             Button("-", row, 18, new Color(0.55f, 0.5f, 0.45f), Color.white, () => ChangeQuantity(pair, -1), 42f, 42f, 0.58f);
-            var quantity = Label(pair.Quantity.ToString(CultureInfo.InvariantCulture), row, 18, charcoal, FontStyle.Bold, TextAnchor.MiddleCenter);
+            var quantity = Label(pair.Quantity.ToString(), row, 18, charcoal, FontStyle.Bold, TextAnchor.MiddleCenter);
             Anchor(quantity.rectTransform, 0.72f, 0.22f, 0.82f, 0.78f, 0f, 0f, 0f, 0f);
             Button("+", row, 18, sage, Color.white, () => ChangeQuantity(pair, 1), 42f, 42f, 0.85f);
         }
 
-        totalText.text = $"합계 {FormatPrice(cart.Sum(pair => pair.UnitPrice * pair.Quantity))}";
+        totalText.text = $"합계 {CafeKioskViewModel.FormatPrice(viewModel.CartTotal)}";
         LayoutRebuilder.ForceRebuildLayoutImmediate(cartList);
     }
 
     private void StartAddToCart(MenuItem item)
     {
-        if (IsDrink(item))
+        if (viewModel.StartAddToCart(item))
         {
-            pendingOptionItem = item;
-            selectedTemperature = item.Category == "Coffee" ? "ICE" : "";
-            selectedSize = "Regular";
-            optionOverlay.gameObject.SetActive(true);
-            statusText.text = $"{item.Name} 옵션을 선택해주세요.";
-            return;
+            RefreshCart();
         }
 
-        AddToCart(item, "", "", item.Price);
-    }
-
-    private void AddToCart(MenuItem item, string temperature, string size, int unitPrice)
-    {
-        var line = cart.FirstOrDefault(entry => entry.Item == item && entry.Temperature == temperature && entry.Size == size && entry.UnitPrice == unitPrice);
-        if (line == null)
-        {
-            line = new CartLine(item, temperature, size, unitPrice);
-            cart.Add(line);
-        }
-
-        line.Quantity++;
-        statusText.text = $"{line.DisplayName} 추가";
-        RefreshCart();
+        RefreshScreens();
     }
 
     private void ChangeQuantity(CartLine line, int delta)
     {
-        line.Quantity += delta;
-        if (line.Quantity <= 0)
-        {
-            cart.Remove(line);
-        }
-
-        statusText.text = "";
+        viewModel.ChangeQuantity(line, delta);
         RefreshCart();
+        RefreshScreens();
     }
 
     private void ClearCart()
     {
-        cart.Clear();
-        statusText.text = "주문을 비웠습니다.";
+        viewModel.ClearCart();
         RefreshCart();
+        RefreshScreens();
     }
 
     private void Checkout()
     {
-        if (cart.Count == 0)
+        if (viewModel.Checkout())
         {
-            statusText.text = "메뉴를 먼저 담아주세요.";
-            return;
+            memberPhoneInput.text = "";
+            RefreshPayment();
         }
 
-        paymentAmount = cart.Sum(pair => pair.UnitPrice * pair.Quantity);
-        paymentTotalText.text = $"결제 금액 {FormatPrice(paymentAmount)}";
-        memberPhoneInput.text = "";
-        memberStatusText.text = "전화번호를 입력하면 스탬프가 적립됩니다.";
-        ticketText.text = "";
-        paymentOverlay.gameObject.SetActive(true);
-        statusText.text = "결제 방식을 선택해주세요.";
+        RefreshScreens();
     }
 
     private void CompletePayment(string method)
     {
-        var purchasedCount = cart.Sum(pair => pair.Quantity);
-        var membershipMessage = ApplyMembership(purchasedCount);
-        var ticketNumber = ++orderNumber;
-        cart.Clear();
-        ticketText.text = $"번호표 {ticketNumber}번";
-        paymentOverlay.gameObject.SetActive(false);
-        statusText.text = $"{orderMode} · {method} 결제 완료 · 번호표 {ticketNumber}번 · {FormatPrice(paymentAmount)} {membershipMessage}";
+        viewModel.CompletePayment(method, memberPhoneInput.text);
+        RefreshPayment();
         RefreshCart();
+        RefreshScreens();
     }
 
     private void CancelPayment()
     {
-        paymentOverlay.gameObject.SetActive(false);
-        statusText.text = "결제를 취소했습니다.";
-    }
-
-    private string ApplyMembership(int purchasedCount)
-    {
-        var result = membershipService.ApplyPurchase(memberPhoneInput.text, purchasedCount);
-        memberStatusText.text = result.StatusText;
-        return result.SummaryText;
+        viewModel.CancelPayment();
+        RefreshScreens();
     }
 
     private void RegisterOrLookupMember()
     {
-        memberStatusText.text = membershipService.RegisterOrLookup(memberPhoneInput.text).StatusText;
+        viewModel.RegisterOrLookupMember(memberPhoneInput.text);
+        RefreshPayment();
     }
 
     private void CreateOptionOverlay(Transform root)
@@ -335,36 +282,30 @@ public sealed class CafeKioskController : MonoBehaviour
 
     private void SelectTemperature(string temperature)
     {
-        selectedTemperature = temperature;
-        statusText.text = $"{temperature} 선택";
+        viewModel.SelectTemperature(temperature);
+        RefreshScreens();
     }
 
     private void SelectSize(string size)
     {
-        selectedSize = size;
-        statusText.text = $"{SizeLabel(size)} 선택";
+        viewModel.SelectSize(size);
+        RefreshScreens();
     }
 
     private void ConfirmDrinkOption()
     {
-        if (pendingOptionItem == null)
+        if (viewModel.ConfirmDrinkOption())
         {
-            optionOverlay.gameObject.SetActive(false);
-            return;
+            RefreshCart();
         }
 
-        var temperature = pendingOptionItem.Category == "Coffee" ? selectedTemperature : "ICE";
-        var unitPrice = pendingOptionItem.Price + SizeExtraPrice(selectedSize);
-        AddToCart(pendingOptionItem, temperature, selectedSize, unitPrice);
-        pendingOptionItem = null;
-        optionOverlay.gameObject.SetActive(false);
+        RefreshScreens();
     }
 
     private void CancelDrinkOption()
     {
-        pendingOptionItem = null;
-        optionOverlay.gameObject.SetActive(false);
-        statusText.text = "옵션 선택을 취소했습니다.";
+        viewModel.CancelDrinkOption();
+        RefreshScreens();
     }
 
     private void CreateStartScreen(Transform root)
@@ -388,10 +329,8 @@ public sealed class CafeKioskController : MonoBehaviour
 
     private void SelectOrderMode(string mode)
     {
-        orderMode = mode;
-        startScreen.gameObject.SetActive(false);
-        orderScreen.gameObject.SetActive(true);
-        statusText.text = $"{orderMode} 주문을 시작합니다.";
+        viewModel.SelectOrderMode(mode);
+        RefreshScreens();
     }
 
     private void CreatePaymentOverlay(Transform root)
@@ -434,6 +373,41 @@ public sealed class CafeKioskController : MonoBehaviour
 
         var back = Button("돌아가기", modal, 19, new Color(0.42f, 0.38f, 0.34f), Color.white, CancelPayment, 150f, 46f);
         Anchor(back.GetComponent<RectTransform>(), 0.5f, 0.06f, 0.5f, 0.14f, -75f, 0f, 75f, 0f);
+    }
+
+    private void RefreshScreens()
+    {
+        if (startScreen != null)
+        {
+            startScreen.gameObject.SetActive(viewModel.IsStartScreenVisible);
+        }
+
+        if (orderScreen != null)
+        {
+            orderScreen.gameObject.SetActive(viewModel.IsOrderScreenVisible);
+        }
+
+        if (optionOverlay != null)
+        {
+            optionOverlay.gameObject.SetActive(viewModel.IsOptionOverlayVisible);
+        }
+
+        if (paymentOverlay != null)
+        {
+            paymentOverlay.gameObject.SetActive(viewModel.IsPaymentOverlayVisible);
+        }
+
+        if (statusText != null)
+        {
+            statusText.text = viewModel.StatusText;
+        }
+    }
+
+    private void RefreshPayment()
+    {
+        paymentTotalText.text = $"결제 금액 {CafeKioskViewModel.FormatPrice(viewModel.PaymentAmount)}";
+        memberStatusText.text = viewModel.MemberStatusText;
+        ticketText.text = viewModel.TicketText;
     }
 
     private void Thumbnail(MenuItem item, Transform parent)
@@ -680,56 +654,6 @@ public sealed class CafeKioskController : MonoBehaviour
         {
             DestroyImmediate(target);
         }
-    }
-
-    private static string CategoryLabel(string category)
-    {
-        return category switch
-        {
-            "All" => "전체",
-            "Coffee" => "커피",
-            "Ade" => "에이드",
-            "Dessert" => "디저트",
-            "Food" => "푸드",
-            _ => category,
-        };
-    }
-
-    private static bool IsDrink(MenuItem item)
-    {
-        return item.Category == "Coffee" || item.Category == "Ade";
-    }
-
-    private static string MenuPriceText(MenuItem item)
-    {
-        return IsDrink(item) ? $"{FormatPrice(item.Price)}부터" : FormatPrice(item.Price);
-    }
-
-    private static int SizeExtraPrice(string size)
-    {
-        return size switch
-        {
-            "Small" => 0,
-            "Regular" => 500,
-            "Large" => 1000,
-            _ => 0,
-        };
-    }
-
-    private static string SizeLabel(string size)
-    {
-        return size switch
-        {
-            "Small" => "Small",
-            "Regular" => "Regular +500원",
-            "Large" => "Large +1,000원",
-            _ => size,
-        };
-    }
-
-    private static string FormatPrice(int price)
-    {
-        return price.ToString("N0", CultureInfo.InvariantCulture) + "원";
     }
 
 }
