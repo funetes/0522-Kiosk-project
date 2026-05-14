@@ -8,10 +8,7 @@ public sealed class CafeKioskMembershipService
     public MembershipResult RegisterOrLookup(string phone)
     {
         phone = NormalizePhone(phone);
-        if (string.IsNullOrWhiteSpace(phone))
-        {
-            return new MembershipResult("전화번호를 입력해주세요.", "");
-        }
+        if (string.IsNullOrWhiteSpace(phone)) return new MembershipResult("전화번호를 입력해주세요.", "");
 
         if (!members.TryGetValue(phone, out var member))
         {
@@ -26,10 +23,7 @@ public sealed class CafeKioskMembershipService
     public MembershipResult ApplyPurchase(string phone, int purchasedCount)
     {
         phone = NormalizePhone(phone);
-        if (string.IsNullOrWhiteSpace(phone))
-        {
-            return new MembershipResult("", "");
-        }
+        if (string.IsNullOrWhiteSpace(phone)) return new MembershipResult("", "");
 
         if (!members.TryGetValue(phone, out var member))
         {
@@ -49,13 +43,24 @@ public sealed class CafeKioskMembershipService
         return new MembershipResult($"스탬프 {member.Stamps}/10 · 보유 쿠폰 {member.Coupons}장", $"· 스탬프 {member.Stamps}/10");
     }
 
-    private static string NormalizePhone(string phone)
+    // -- 쿠폰 존재 여부 확인 --
+    public bool HasCoupon(string phone)
     {
-        if (string.IsNullOrWhiteSpace(phone))
-        {
-            return "";
-        }
-
-        return new string(phone.Where(char.IsDigit).ToArray());
+        phone = NormalizePhone(phone);
+        return members.TryGetValue(phone, out var member) && member.Coupons > 0;
     }
+
+    // -- 쿠폰 차감 --
+    public bool UseCoupon(string phone)
+    {
+        phone = NormalizePhone(phone);
+        if (members.TryGetValue(phone, out var member) && member.Coupons > 0)
+        {
+            member.Coupons--;
+            return true;
+        }
+        return false;
+    }
+
+    private static string NormalizePhone(string phone) => new string(phone.Where(char.IsDigit).ToArray());
 }

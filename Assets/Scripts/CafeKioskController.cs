@@ -31,6 +31,8 @@ public sealed class CafeKioskController : MonoBehaviour
     private CafeKioskOrderScreen orderScreenUI;
     private CafeKioskOptionPopup optionPopupUI;
     private CafeKioskPaymentPopup paymentPopupUI;
+    private CafeKioskAdminPopup adminPopupUI;
+    private CafeKioskPasswordPopup passwordPopupUI;
     private CafeKioskReceiptPopup receiptPopupUI;
 
     private void OnEnable()
@@ -84,9 +86,26 @@ public sealed class CafeKioskController : MonoBehaviour
             () => RefreshScreens()
         );
 
-        startScreenUI = new CafeKioskStartScreen(root, viewModel, font, cream, espresso, charcoal, sage, 
+        passwordPopupUI = new CafeKioskPasswordPopup(root, viewModel, font, paper, charcoal, espresso, 
+            () => RefreshScreens(),
+            () => adminPopupUI.Show()
+        );
+
+        adminPopupUI = new CafeKioskAdminPopup(root, viewModel, font, paper, charcoal, espresso, 
             () => RefreshScreens()
         );
+
+
+        // --- Admin 버튼 생성 ---
+        var adminBtn = CafeKioskUIUtility.Button("Admin", root, 14, charcoal, Color.white, () =>
+        {
+            passwordPopupUI.Show();
+            RefreshScreens();
+        }, font, 80f, 40f);
+
+        CafeKioskUIUtility.Anchor(adminBtn.GetComponent<RectTransform>(), 0.45f, 0.92f, 0.55f, 0.97f, 0f, 0f, 0f, 0f);
+
+        startScreenUI = new CafeKioskStartScreen(root, viewModel, font, cream, espresso, charcoal, sage, () => RefreshScreens());
 
         receiptPopupUI = new CafeKioskReceiptPopup(root, viewModel, font, paper, charcoal, sage, espresso, caramel, 
             () =>
@@ -105,6 +124,8 @@ public sealed class CafeKioskController : MonoBehaviour
         orderScreenUI?.Refresh();
         optionPopupUI?.Refresh();
         paymentPopupUI?.Refresh();
+        adminPopupUI?.Refresh();
+        passwordPopupUI?.Refresh();
         receiptPopupUI?.Refresh();
     }
 

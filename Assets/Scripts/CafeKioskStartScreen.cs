@@ -51,6 +51,7 @@ public sealed class CafeKioskStartScreen
 
     public void Refresh()
     {
+        Debug.Log("Refreshing Start Screen : " + viewModel.IsStartScreenVisible);
         Root.gameObject.SetActive(viewModel.IsStartScreenVisible);
     }
 }
