@@ -149,7 +149,10 @@ public sealed class CafeKioskOptionPopup
     {
         if (viewModel.PendingOptionItem is MenuItem item)
         {
-            Debug.Log(nameof(OnPendingOptionItemSet) + "category : " + item.Category);
+            //Debug.Log(nameof(OnPendingOptionItemSet) + "category : " + item.Category);
+
+            var isAde = item.Category == "Ade";
+            hotButton.gameObject.SetActive(!isAde);
         }
 
 
