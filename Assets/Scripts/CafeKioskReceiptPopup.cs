@@ -8,6 +8,8 @@ public sealed class CafeKioskReceiptPopup
     // 영수증에 표시할 주문 상태와 결제 결과는 ViewModel에서 읽어옵니다.
     private readonly CafeKioskViewModel viewModel;
     // 런타임에서 만든 UI Text들이 같은 폰트와 색상 체계를 쓰도록 생성자에서 받은 값을 보관합니다.
+    public RectTransform Root { get; private set; }
+    private readonly CafeKioskViewModel viewModel;
     private readonly Font font;
     private readonly Color paper;
     private readonly Color charcoal;
@@ -88,9 +90,8 @@ public sealed class CafeKioskReceiptPopup
 
     public void Refresh()
     {
-        // ViewModel의 표시 상태에 맞춰 팝업을 켜거나 끕니다.
-        Root.gameObject.SetActive(viewModel.IsReceiptVisible);
         // 팝업이 열린 직후 최신 결제 결과가 보이도록 매번 텍스트를 갱신합니다.
+        Root.gameObject.SetActive(viewModel.IsReceiptVisible);
         RefreshStatus();
     }
 
