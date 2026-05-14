@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -218,32 +219,7 @@ public sealed class CafeKioskOrderScreen
 
         foreach (var pair in viewModel.Cart)
         {
-            // 장바구니의 각 항목(아이템 + 수량) 행 생성
-            var row = CafeKioskUIUtility.Panel(pair.Item.Name, cartList, new Color(0.98f, 0.94f, 0.88f));
-            row.sizeDelta = new Vector2(0f, 78f);
-
-            var nameLabel = CafeKioskUIUtility.Label(pair.DisplayName, row, 16, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft, font);
-            CafeKioskUIUtility.Anchor(nameLabel.rectTransform, 0f, 0.45f, 0.54f, 1f, 12f, 0f, 0f, 0f);
-
-            var priceLabel = CafeKioskUIUtility.Label(CafeKioskViewModel.FormatPrice(pair.UnitPrice * pair.Quantity), row, 16, caramel, FontStyle.Bold, TextAnchor.MiddleLeft, font);
-            CafeKioskUIUtility.Anchor(priceLabel.rectTransform, 0f, 0f, 0.54f, 0.48f, 12f, 0f, 0f, 0f);
-
-            // 수량 감소 버튼
-            CafeKioskUIUtility.Button("-", row, 18, new Color(0.55f, 0.5f, 0.45f), Color.white, () => {
-                viewModel.ChangeQuantity(pair, -1);
-                RefreshCart();
-                RefreshStatus();
-            }, font, 42f, 42f, 0.58f);
-
-            var quantityLabel = CafeKioskUIUtility.Label(pair.Quantity.ToString(), row, 18, charcoal, FontStyle.Bold, TextAnchor.MiddleCenter, font);
-            CafeKioskUIUtility.Anchor(quantityLabel.rectTransform, 0.72f, 0.22f, 0.82f, 0.78f, 0f, 0f, 0f, 0f);
-            
-            // 수량 증가 버튼
-            CafeKioskUIUtility.Button("+", row, 18, sage, Color.white, () => {
-                viewModel.ChangeQuantity(pair, 1);
-                RefreshCart();
-                RefreshStatus();
-            }, font, 42f, 42f, 0.85f);
+            BuildCartItemUI(pair);
         }
 
         // 총 합계 금액 갱신
@@ -251,6 +227,74 @@ public sealed class CafeKioskOrderScreen
         LayoutRebuilder.ForceRebuildLayoutImmediate(cartList);
     }
 
+    // 장바구니 항목 UI 생성
+    private void BuildCartItemUI(CartLine pair)
+    {
+        // 장바구니의 각 항목(아이템 + 수량) 행 생성
+        var row = CafeKioskUIUtility.Panel(pair.Item.Name, cartList, new Color(0.98f, 0.94f, 0.88f));
+        row.sizeDelta = new Vector2(0f, 78f);
+        CafeKioskUIUtility.AddHorizontalLayout(row, 8f, TextAnchor.MiddleCenter);
+
+        // row의 레이아웃 그룹이 자식들의 넓이를 제어할 수 있도록 설정 변경
+        var rowLayout = row.GetComponent<HorizontalLayoutGroup>();
+        rowLayout.childControlWidth = true;
+        rowLayout.padding = new RectOffset(12, 12, 8, 8); // 안쪽 여백 설정
+
+        // 1. Info Panel: flexibleWidth를 1로 설정하여 남는 공간을 모두 차지하게 함
+        var infoPanel = CafeKioskUIUtility.Panel("Info Panel", row, new Color(0f, 0f, 0f, 0f));
+        var infoLayout = infoPanel.gameObject.AddComponent<LayoutElement>();
+        infoLayout.flexibleWidth = 1f;
+
+        CafeKioskUIUtility.AddVerticalLayout(infoPanel, 0, TextAnchor.MiddleLeft);
+
+        var infoVGroup = infoPanel.GetComponent<VerticalLayoutGroup>();
+        infoVGroup.childForceExpandHeight = true; // 높이 방향으로 자식들을 확장(분산)시킴
+        
+        var infoFitter = infoPanel.GetComponent<ContentSizeFitter>();
+        
+        if (infoFitter != null) CafeKioskUIUtility.DestroyComponent(infoFitter);
+
+        var nameLabel = CafeKioskUIUtility.Label(pair.DisplayName, infoPanel, 16, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft, font);
+        
+        // 2줄 이상 표시 및 자동 높이 조절 설정
+        nameLabel.verticalOverflow = VerticalWrapMode.Overflow;
+        var nameFitter = nameLabel.gameObject.AddComponent<ContentSizeFitter>();
+        nameFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize; 
+        
+        var priceLabel = CafeKioskUIUtility.Label(CafeKioskViewModel.FormatPrice(pair.UnitPrice * pair.Quantity), infoPanel, 16, caramel, FontStyle.Bold, TextAnchor.MiddleLeft, font);
+
+        // 2. Counter Panel: preferredWidth를 고정값으로 설정하여 넓이를 유지함
+        var counterPanel = CafeKioskUIUtility.Panel("Counter Panel", row, new Color(0f, 0f, 0f, 0f));
+        var counterLayout = counterPanel.gameObject.AddComponent<LayoutElement>();
+        counterLayout.preferredWidth = 150f; // 수량 조절 영역의 넓이를 150으로 고정
+
+        CafeKioskUIUtility.AddHorizontalLayout(counterPanel, 0, TextAnchor.MiddleCenter);
+
+        // 버튼의 높이가 강제로 늘어나지 않도록 설정을 끕니다.
+        var counterGroup = counterPanel.GetComponent<HorizontalLayoutGroup>();
+        counterGroup.childControlHeight = false;     // 높이 제어권을 자식에게 돌려줌
+        counterGroup.childForceExpandHeight = false;  // 세로 강제 확장 방지
+
+
+        // 수량 감소 버튼
+        CafeKioskUIUtility.Button("-", counterPanel, 18, new Color(0.55f, 0.5f, 0.45f), Color.white, () =>
+        {
+            viewModel.ChangeQuantity(pair, -1);
+            RefreshCart();
+            RefreshStatus();
+        }, font, 42f, 42f);
+
+        var quantityLabel = CafeKioskUIUtility.Label(pair.Quantity.ToString(), counterPanel, 18, charcoal, FontStyle.Bold, TextAnchor.MiddleCenter, font);
+quantityLabel.rectTransform.sizeDelta = new Vector2(50f, 42f); // 가로 50, 세로 42(버튼과 동일)
+        // 수량 증가 버튼
+        CafeKioskUIUtility.Button("+", counterPanel, 18, sage, Color.white, () =>
+        {
+            viewModel.ChangeQuantity(pair, 1);
+            RefreshCart();
+            RefreshStatus();
+        }, font, 42f, 42f);
+    }
+    
     // 하단 상태 메시지 텍스트 갱신
     public void RefreshStatus()
     {
