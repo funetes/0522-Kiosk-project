@@ -194,4 +194,14 @@ public sealed class CafeKioskOptionPopup
     {
         CafeKioskUIUtility.SetSelectedInGroup(selectedButton, smallButton, regularButton, largeButton);
     }
+
+    private void SelectTemperatureButton(Button selectedButton)
+    {
+        CafeKioskUIUtility.SetSelectedInGroup(selectedButton, iceButton, hotButton);
+    }
+
+    private void SelectSizeButton(Button selectedButton)
+    {
+        CafeKioskUIUtility.SetSelectedInGroup(selectedButton, smallButton, regularButton, largeButton);
+    }
 }

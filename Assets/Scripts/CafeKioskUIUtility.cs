@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public static class CafeKioskUIUtility
 {
-    private static readonly Color SelectedBorderColor = new Color(249/255f,228/255f,0/255f);
+    private static readonly Color SelectedBorderColor = new Color(1f, 0.86f, 0.25f);
 
     public static RectTransform Panel(string name, Transform parent, Color color)
     {
@@ -42,8 +42,11 @@ public static class CafeKioskUIUtility
 
         var button = buttonRect.gameObject.AddComponent<Button>();
         button.targetGraphic = buttonRect.GetComponent<Image>();
-        AddSelectedBorder(button, selected);
-        button.onClick.AddListener(() => action?.Invoke());
+        if (selected)
+        {
+            AddSelectedBorder(button, true);
+        }
+        button.onClick.AddListener(action);
 
         var label = Label(text, buttonRect, size, foreground, FontStyle.Bold, TextAnchor.MiddleCenter, font);
         Stretch(label.rectTransform);
@@ -84,7 +87,7 @@ public static class CafeKioskUIUtility
         {
             outline = button.gameObject.AddComponent<Outline>();
             outline.effectColor = SelectedBorderColor;
-            outline.effectDistance = new Vector2(8f, -8f);
+            outline.effectDistance = new Vector2(4f, -4f);
             outline.useGraphicAlpha = false;
         }
 

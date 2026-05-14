@@ -108,18 +108,18 @@ public sealed class CafeKioskReceiptPopup
 
     private void RefreshOrderList()
     {
-        // 이전에 그려둔 주문 줄을 지우고 현재 Cart 기준으로 다시 만듭니다.
+        // 이전에 그려둔 주문 줄을 지우고 결제 완료 시점에 저장한 주문내역 기준으로 다시 만듭니다.
         CafeKioskUIUtility.ClearChildren(orderList);
 
-        if (viewModel.Cart.Count == 0)
+        if (viewModel.ReceiptItems.Count == 0)
         {
-            // 결제 흐름상 보통 Cart가 남아 있지만, 비어 있는 경우에도 팝업이 깨지지 않게 처리합니다.
+            // 결제 내역이 비어 있는 경우에도 팝업이 깨지지 않게 처리합니다.
             var empty = CafeKioskUIUtility.Label("표시할 주문 내역이 없습니다.", orderList, 16, charcoal, FontStyle.Normal, TextAnchor.MiddleLeft, font);
             empty.rectTransform.sizeDelta = new Vector2(0f, 34f);
             return;
         }
 
-        foreach (var line in viewModel.Cart)
+        foreach (var line in viewModel.ReceiptItems)
         {
             // 한 줄에는 메뉴명/옵션/수량과 해당 줄의 합계 금액을 좌우로 배치합니다.
             var row = CafeKioskUIUtility.Panel(line.DisplayName, orderList, new Color(0.98f, 0.94f, 0.88f));
