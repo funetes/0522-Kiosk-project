@@ -6,7 +6,7 @@ public static class CafeKioskMenuCatalog
     {
         return new List<MenuItem>
         {
-            new MenuItem("맥길동 커피", "Coffee", "깔끔한 산미의 기본 커피", 4500),
+            new MenuItem("아메리카노", "Coffee", "깔끔한 산미의 기본 커피", 4500),
             new MenuItem("카페 라떼", "Coffee", "우유 거품이 부드러운 라떼", 5200),
             new MenuItem("바닐라 라떼", "Coffee", "달콤한 바닐라 향 라떼", 5800),
             new MenuItem("콜드브루", "Coffee", "차갑게 우린 깊은 커피", 5500),
