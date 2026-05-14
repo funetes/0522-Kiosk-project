@@ -15,6 +15,8 @@ public sealed class CafeKioskOptionPopup
     public CafeKioskOptionPopup(Transform parent, CafeKioskViewModel viewModel, Font font, Color paper, Color charcoal, Color sage, Color espresso, Color caramel, System.Action onAction)
     {
         this.viewModel = viewModel;
+        this.viewModel.OnPendingOptionItemSet += OnPendingOptionItemSet;
+
         this.font = font;
         this.paper = paper;
         this.charcoal = charcoal;
@@ -70,5 +72,15 @@ public sealed class CafeKioskOptionPopup
     public void Refresh()
     {
         Root.gameObject.SetActive(viewModel.IsOptionOverlayVisible);
+    }
+
+    private void OnPendingOptionItemSet()
+    {
+        if (viewModel.PendingOptionItem is MenuItem item)
+        {
+            Debug.Log(nameof(OnPendingOptionItemSet) + "category : " + item.Category);
+        }
+
+
     }
 }

@@ -1,4 +1,5 @@
 // List<T>, IReadOnlyList<T> 같은 컬렉션 타입을 사용하기 위해 가져옵니다.
+using System;
 using System.Collections.Generic;
 // 가격을 "1,000원"처럼 쉼표가 들어간 문자열로 바꾸기 위해 가져옵니다.
 using System.Globalization;
@@ -15,8 +16,11 @@ public sealed class CafeKioskViewModel
     // 멤버십 가입, 조회, 스탬프 적립 규칙을 처리하는 서비스입니다.
     private readonly CafeKioskMembershipService membershipService = new();
 
+    public event Action OnPendingOptionItemSet;
+    
     // 음료 메뉴를 눌렀을 때, 옵션 선택 창에서 어떤 메뉴를 처리 중인지 기억합니다.
-    private MenuItem pendingOptionItem;
+    public MenuItem PendingOptionItem { get; private set; }
+
     // 결제 완료 때 보여줄 번호표 번호입니다. 결제할 때마다 1씩 증가합니다.
     private int orderNumber = 100;
 
@@ -100,7 +104,9 @@ public sealed class CafeKioskViewModel
         if (IsDrink(item))
         {
             // 옵션 선택이 끝날 때 어떤 메뉴를 담아야 하는지 기억합니다.
-            pendingOptionItem = item;
+            PendingOptionItem = item;
+
+            OnPendingOptionItemSet();
             // 커피는 ICE/HOT를 고를 수 있으므로 기본값을 ICE로 둡니다. 에이드는 온도 선택 없이 ICE로 처리합니다.
             SelectedTemperature = item.Category == "Coffee" ? "ICE" : "";
             // 옵션 창을 열 때마다 사이즈 기본값을 Regular로 초기화합니다.
@@ -141,7 +147,7 @@ public sealed class CafeKioskViewModel
     public bool ConfirmDrinkOption()
     {
         // 처리 중인 음료가 없다면 더 할 일이 없으므로 팝업만 닫습니다.
-        if (pendingOptionItem == null)
+        if (PendingOptionItem == null)
         {
             // 컨트롤러가 옵션 팝업을 숨기도록 상태를 false로 바꿉니다.
             IsOptionOverlayVisible = false;
@@ -150,13 +156,13 @@ public sealed class CafeKioskViewModel
         }
 
         // 커피는 사용자가 고른 온도를 쓰고, 에이드는 항상 ICE로 저장합니다.
-        var temperature = pendingOptionItem.Category == "Coffee" ? SelectedTemperature : "ICE";
+        var temperature = PendingOptionItem.Category == "Coffee" ? SelectedTemperature : "ICE";
         // 기본 가격에 사이즈 추가 금액을 더해 실제 단가를 계산합니다.
-        var unitPrice = pendingOptionItem.Price + SizeExtraPrice(SelectedSize);
+        var unitPrice = PendingOptionItem.Price + SizeExtraPrice(SelectedSize);
         // 계산된 옵션과 단가를 사용해 장바구니에 추가합니다.
-        AddToCart(pendingOptionItem, temperature, SelectedSize, unitPrice);
+        AddToCart(PendingOptionItem, temperature, SelectedSize, unitPrice);
         // 옵션 처리가 끝났으므로 임시로 기억한 메뉴를 비웁니다.
-        pendingOptionItem = null;
+        PendingOptionItem = null;
         // 컨트롤러가 옵션 팝업을 숨기도록 상태를 false로 바꿉니다.
         IsOptionOverlayVisible = false;
         // 장바구니가 바뀌었으므로 true를 반환합니다.
@@ -167,7 +173,7 @@ public sealed class CafeKioskViewModel
     public void CancelDrinkOption()
     {
         // 담으려던 음료 메뉴를 비웁니다.
-        pendingOptionItem = null;
+        PendingOptionItem = null;
         // 옵션 팝업을 닫도록 상태를 false로 바꿉니다.
         IsOptionOverlayVisible = false;
         // 화면 하단에 취소 메시지를 보여줍니다.
