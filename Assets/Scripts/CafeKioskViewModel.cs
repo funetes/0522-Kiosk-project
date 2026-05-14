@@ -8,6 +8,7 @@ public sealed class CafeKioskViewModel
 {
     private readonly List<MenuItem> menuItems;
     private readonly List<CartLine> cart = new();
+    private readonly List<CartLine> receiptItems = new();
     private readonly CafeKioskMembershipService membershipService = new();
 
     public event Action OnPendingOptionItemSet;
@@ -40,6 +41,7 @@ public sealed class CafeKioskViewModel
 
     public IReadOnlyList<string> Categories { get; }
     public IReadOnlyList<CartLine> Cart => cart;
+    public IReadOnlyList<CartLine> ReceiptItems => receiptItems;
     public string SelectedCategory { get; private set; }
     // 음료 옵션 창에서 선택된 온도입니다.
     public string SelectedTemperature { get; private set; }
@@ -185,41 +187,34 @@ public sealed class CafeKioskViewModel
 
     public void CompletePayment(string method, string memberPhone)
     {
+        var purchasedCount = cart.Sum(line => line.Quantity);
         if (IsUsingCoupon) membershipService.UseCoupon(memberPhone);
+
+        var membershipMessage = ApplyMembership(memberPhone, purchasedCount);
+        var ticketNumber = ++orderNumber;
+
+        receiptItems.Clear();
+        receiptItems.AddRange(cart);
 
         var record = new OrderRecord
         {
-            OrderNumber = ++orderNumber,
-            OrderMode = this.OrderMode,
+            OrderNumber = ticketNumber,
+            OrderMode = OrderMode,
             PaymentMethod = method,
             OriginalAmount = CartTotal,
             DiscountAmount = CurrentDiscount,
             TotalAmount = PaymentAmount,
             OrderTime = System.DateTime.Now,
-            PurchasedItems = new List<CartLine>(cart)
+            PurchasedItems = new List<CartLine>(receiptItems)
         };
         orderHistory.Add(record);
 
-        ApplyMembership(memberPhone, cart.Sum(l => l.Quantity));
         cart.Clear();
         CurrentDiscount = 0;
         IsUsingCoupon = false;
-        TicketText = $"번호표 {record.OrderNumber}번";
-        IsPaymentOverlayVisible = false;
-        StatusText = "결제가 완료되었습니다.";
-        // 멤버십 스탬프 적립을 위해 구매한 총 메뉴 개수를 계산합니다.
-        var purchasedCount = cart.Sum(line => line.Quantity);
-        // 전화번호가 있으면 멤버십 적립을 적용하고, 상태 메시지에 붙일 요약 문구를 받습니다.
-        var membershipMessage = ApplyMembership(memberPhone, purchasedCount);
-        // 번호표 번호를 1 증가시키고, 증가된 값을 이번 주문 번호로 사용합니다.
-        var ticketNumber = ++orderNumber;
-        // 결제 창에 표시할 번호표 문구를 저장합니다.
         TicketText = $"번호표 {ticketNumber}번";
-        // 컨트롤러가 결제 팝업을 숨기도록 상태를 false로 바꿉니다.
         IsPaymentOverlayVisible = false;
-        // 주문 방식, 결제 방식, 번호표, 금액, 멤버십 결과를 하나의 상태 메시지로 만듭니다.
         StatusText = $"{OrderMode} · {method} 결제 완료 · 번호표 {ticketNumber}번 · {FormatPrice(PaymentAmount)} {membershipMessage}";
-        // 영수증 popup을 보여줍니다.
         IsReceiptVisible = true;
     }
 
@@ -354,10 +349,10 @@ public sealed class CafeKioskViewModel
     {
         // 결제가 끝났으므로 장바구니를 비웁니다.
         cart.Clear();
+        receiptItems.Clear();
         // 시작화면을 보여줍니다.
         IsStartScreenVisible = true;
         // 영수증 화면 popup을 닫습니다.
         IsReceiptVisible = false;
     }
 }
-
