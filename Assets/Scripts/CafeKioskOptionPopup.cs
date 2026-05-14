@@ -5,7 +5,11 @@ public sealed class CafeKioskOptionPopup
 {
     public RectTransform Root { get; private set; }
 
+    private Button iceButton = null;
     private Button hotButton = null;
+    private Button smallButton = null;
+    private Button regularButton = null;
+    private Button largeButton = null;
 
     private readonly CafeKioskViewModel viewModel;
     private readonly Font font;
@@ -108,8 +112,18 @@ public sealed class CafeKioskOptionPopup
         temps.sizeDelta = new Vector2(0f, 54f);
         CafeKioskUIUtility.AddHorizontalLayout(temps, 12f, TextAnchor.MiddleCenter);
 
-        CafeKioskUIUtility.Button("ICE", temps, 22, sage, Color.white, () => { viewModel.SelectTemperature("ICE"); onAction?.Invoke(); }, font, 150f, 54f);
-        hotButton = CafeKioskUIUtility.Button("HOT", temps, 22, espresso, Color.white, () => { viewModel.SelectTemperature("HOT"); onAction?.Invoke(); }, font, 150f, 54f);
+        iceButton = CafeKioskUIUtility.Button("ICE", temps, 22, sage, Color.white, () =>
+        {
+            viewModel.SelectTemperature("ICE");
+            SelectTemperatureButton(iceButton);
+            onAction?.Invoke();
+        }, font, 150f, 54f, selected: true);
+        hotButton = CafeKioskUIUtility.Button("HOT", temps, 22, espresso, Color.white, () =>
+        {
+            viewModel.SelectTemperature("HOT");
+            SelectTemperatureButton(hotButton);
+            onAction?.Invoke();
+        }, font, 150f, 54f);
 
         var sizeTitle = CafeKioskUIUtility.Label("음료 사이즈", modal, 20, charcoal, FontStyle.Bold, TextAnchor.MiddleLeft, font);
 
@@ -117,9 +131,24 @@ public sealed class CafeKioskOptionPopup
         sizes.sizeDelta = new Vector2(0f, 74f);
         CafeKioskUIUtility.AddHorizontalLayout(sizes, 12f, TextAnchor.MiddleCenter);
 
-        CafeKioskUIUtility.Button("Small\n기본", sizes, 17, new Color(0.42f, 0.38f, 0.34f), Color.white, () => { viewModel.SelectSize("Small"); onAction?.Invoke(); }, font, 126f, 74f);
-        CafeKioskUIUtility.Button("Regular\n+500원", sizes, 17, caramel, Color.white, () => { viewModel.SelectSize("Regular"); onAction?.Invoke(); }, font, 140f, 74f);
-        CafeKioskUIUtility.Button("Large\n+1,000원", sizes, 17, sage, Color.white, () => { viewModel.SelectSize("Large"); onAction?.Invoke(); }, font, 140f, 74f);
+        smallButton = CafeKioskUIUtility.Button("Small\n기본", sizes, 17, new Color(0.42f, 0.38f, 0.34f), Color.white, () =>
+        {
+            viewModel.SelectSize("Small");
+            SelectSizeButton(smallButton);
+            onAction?.Invoke();
+        }, font, 126f, 74f);
+        regularButton = CafeKioskUIUtility.Button("Regular\n+500원", sizes, 17, caramel, Color.white, () =>
+        {
+            viewModel.SelectSize("Regular");
+            SelectSizeButton(regularButton);
+            onAction?.Invoke();
+        }, font, 140f, 74f, selected: true);
+        largeButton = CafeKioskUIUtility.Button("Large\n+1,000원", sizes, 17, sage, Color.white, () =>
+        {
+            viewModel.SelectSize("Large");
+            SelectSizeButton(largeButton);
+            onAction?.Invoke();
+        }, font, 140f, 74f);
 
         var actionSpacer = CafeKioskUIUtility.Panel("Spacer", modal, new Color(0, 0, 0, 0));
         actionSpacer.sizeDelta = new Vector2(0f, 24f);
@@ -149,12 +178,20 @@ public sealed class CafeKioskOptionPopup
     {
         if (viewModel.PendingOptionItem is MenuItem item)
         {
-            //Debug.Log(nameof(OnPendingOptionItemSet) + "category : " + item.Category);
-
             var isAde = item.Category == "Ade";
             hotButton.gameObject.SetActive(!isAde);
+            SelectTemperatureButton(iceButton);
+            SelectSizeButton(regularButton);
         }
+    }
 
+    private void SelectTemperatureButton(Button selectedButton)
+    {
+        CafeKioskUIUtility.SetSelectedInGroup(selectedButton, iceButton, hotButton);
+    }
 
+    private void SelectSizeButton(Button selectedButton)
+    {
+        CafeKioskUIUtility.SetSelectedInGroup(selectedButton, smallButton, regularButton, largeButton);
     }
 }
