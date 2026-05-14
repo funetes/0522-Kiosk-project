@@ -73,6 +73,8 @@ public sealed class CafeKioskViewModel
     public bool IsOptionOverlayVisible { get; private set; }
     // 결제 팝업이 열려 있는지 나타냅니다.
     public bool IsPaymentOverlayVisible { get; private set; }
+    // 영수증 팝업이 열려 있는지 나타냅니다.
+    public bool IsReceiptVisible { get; private set; }
 
     // 현재 선택된 카테고리에 따라 화면에 보여줄 메뉴만 골라서 반환합니다.
     public IReadOnlyList<MenuItem> VisibleMenuItems =>
@@ -247,14 +249,14 @@ public sealed class CafeKioskViewModel
         var membershipMessage = ApplyMembership(memberPhone, purchasedCount);
         // 번호표 번호를 1 증가시키고, 증가된 값을 이번 주문 번호로 사용합니다.
         var ticketNumber = ++orderNumber;
-        // 결제가 끝났으므로 장바구니를 비웁니다.
-        cart.Clear();
         // 결제 창에 표시할 번호표 문구를 저장합니다.
         TicketText = $"번호표 {ticketNumber}번";
         // 컨트롤러가 결제 팝업을 숨기도록 상태를 false로 바꿉니다.
         IsPaymentOverlayVisible = false;
         // 주문 방식, 결제 방식, 번호표, 금액, 멤버십 결과를 하나의 상태 메시지로 만듭니다.
         StatusText = $"{OrderMode} · {method} 결제 완료 · 번호표 {ticketNumber}번 · {FormatPrice(PaymentAmount)} {membershipMessage}";
+        // 영수증 popup을 보여줍니다.
+        IsReceiptVisible = true;
     }
 
     // 결제 창에서 "돌아가기" 버튼을 눌렀을 때 호출됩니다.
@@ -389,6 +391,16 @@ public sealed class CafeKioskViewModel
 
         // 상태메시지
         StatusText = "주문 방식 선택 화면으로 돌아갑니다.";
+    }
+    // 영수증 팝업에서 확인을 눌렀을때 실행됩니다.
+    public void ConfirmReceipt()
+    {
+        // 결제가 끝났으므로 장바구니를 비웁니다.
+        cart.Clear();
+        // 시작화면을 보여줍니다.
+        IsStartScreenVisible = true;
+        // 영수증 화면 popup을 닫습니다.
+        IsReceiptVisible = false;
     }
 }
 

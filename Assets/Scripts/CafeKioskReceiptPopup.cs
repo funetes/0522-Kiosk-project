@@ -88,7 +88,7 @@ public sealed class CafeKioskReceiptPopup
     {
         TicketText.text = string.IsNullOrWhiteSpace(viewModel.TicketText) ? "번호표 준비 중" : viewModel.TicketText;
         PaymentAmount.text = $"결제 금액 {CafeKioskViewModel.FormatPrice(viewModel.PaymentAmount)}";
-        orderModeText.text = string.IsNullOrWhiteSpace(viewModel.OrderMode) ? "주문 방식 -" : $"주문 방식 {viewModel.OrderMode}";
+        orderModeText.text = string.IsNullOrWhiteSpace(viewModel.OrderMode) ? "주문 방식 -" : $"주문 방식 - {viewModel.OrderMode}";
         memberStatusText.text = viewModel.MemberStatusText;
         statusText.text = viewModel.StatusText;
 
