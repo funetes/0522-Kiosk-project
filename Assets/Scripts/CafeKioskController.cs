@@ -86,9 +86,15 @@ public sealed class CafeKioskController : MonoBehaviour
             () => RefreshScreens()
         );
 
-        startScreenUI = new CafeKioskStartScreen(root, viewModel, font, cream, espresso, charcoal, sage, 
+        passwordPopupUI = new CafeKioskPasswordPopup(root, viewModel, font, paper, charcoal, espresso, 
+            () => RefreshScreens(),
+            () => adminPopupUI.Show()
+        );
+
+        adminPopupUI = new CafeKioskAdminPopup(root, viewModel, font, paper, charcoal, espresso, 
             () => RefreshScreens()
         );
+
 
         // --- Admin 버튼 생성 ---
         var adminBtn = CafeKioskUIUtility.Button("Admin", root, 14, charcoal, Color.white, () =>
