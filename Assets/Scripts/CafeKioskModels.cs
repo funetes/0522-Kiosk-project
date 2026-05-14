@@ -74,3 +74,15 @@ public sealed class MembershipResult
     public string StatusText { get; }
     public string SummaryText { get; }
 }
+public class OrderRecord
+{
+    public int OrderNumber { get; set; }
+    public string OrderMode { get; set; }
+    public string PaymentMethod { get; set; }
+    public int OriginalAmount { get; set; }      
+    public int DiscountAmount { get; set; }      
+    public int TotalAmount { get; set; }         
+
+    public System.DateTime OrderTime { get; set; }
+    public System.Collections.Generic.List<CartLine> PurchasedItems { get; set; }
+}
