@@ -8,10 +8,6 @@ public sealed class CafeKioskReceiptPopup
     // 영수증에 표시할 주문 상태와 결제 결과는 ViewModel에서 읽어옵니다.
     private readonly CafeKioskViewModel viewModel;
     // 런타임에서 만든 UI Text들이 같은 폰트와 색상 체계를 쓰도록 생성자에서 받은 값을 보관합니다.
-    public RectTransform Root { get; private set; }
-    // 영수증에 표시할 주문 상태와 결제 결과는 ViewModel에서 읽어옵니다.
-    private readonly CafeKioskViewModel viewModel;
-    // 런타임에서 만든 UI Text들이 같은 폰트와 색상 체계를 쓰도록 생성자에서 받은 값을 보관합니다.
     private readonly Font font;
     private readonly Color paper;
     private readonly Color charcoal;

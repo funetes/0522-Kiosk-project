@@ -70,24 +70,8 @@ public sealed class CafeKioskViewModel
     // 영수증 팝업이 열려 있는지 나타냅니다.
     public bool IsReceiptVisible { get; private set; }
 
-    public string SelectedTemperature { get; private set; }
-    public string SelectedSize { get; private set; }
-    public string OrderMode { get; private set; } = "";
-    public string StatusText { get; private set; } = "";
-    public string MemberStatusText { get; private set; }
-    public string TicketText { get; private set; } = "";
-    public int PaymentAmount { get; private set; }
     public int CurrentDiscount { get; private set; } = 0;
     public bool IsUsingCoupon { get; private set; } = false;
-
-    public int CartTotal => cart.Sum(line => line.UnitPrice * line.Quantity);
-    public bool HasCartItems => cart.Count > 0;
-    public bool IsStartScreenVisible { get; private set; } = true;
-    public bool IsOrderScreenVisible => !IsStartScreenVisible;
-    public bool IsOptionOverlayVisible { get; private set; }
-    public bool IsPaymentOverlayVisible { get; private set; }
-    // 영수증 팝업이 열려 있는지 나타냅니다.
-    public bool IsReceiptVisible { get; private set; }
 
     public IReadOnlyList<MenuItem> VisibleMenuItems => menuItems.Where(item => SelectedCategory == "All" || item.Category == SelectedCategory).ToList();
 
