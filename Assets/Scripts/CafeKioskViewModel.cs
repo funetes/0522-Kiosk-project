@@ -30,7 +30,7 @@ public sealed class CafeKioskViewModel
         // 메뉴 카탈로그에서 전체 메뉴 데이터를 가져옵니다.
         menuItems = CafeKioskMenuCatalog.CreateMenu();
         // 화면 상단 카테고리 버튼에 사용할 카테고리 목록입니다.
-        Categories = new[] { "All", "Coffee", "Ade", "Dessert", "Food" };
+        Categories = new[] { "All", "Coffee", "Ade", "Dessert", "Food" , "뒤로가기" };
         // 처음에는 전체 메뉴를 보여주도록 "All"을 선택합니다.
         SelectedCategory = "All";
         // 음료 옵션의 기본 온도는 ICE입니다.
@@ -83,7 +83,14 @@ public sealed class CafeKioskViewModel
     public void SelectCategory(string category)
     {
         // 선택된 카테고리를 저장하면 VisibleMenuItems 결과가 달라집니다.
+
+        if (category == "뒤로가기")
+        {
+            BackToStartScreen();
+            return;
+        }
         SelectedCategory = category;
+
     }
 
     // 시작 화면에서 "매장" 또는 "포장"을 눌렀을 때 호출됩니다.
@@ -372,4 +379,16 @@ public sealed class CafeKioskViewModel
             _ => size,
         };
     }
+
+    public void BackToStartScreen()
+    {
+        cart.Clear();
+        // 시작화면 다시 보이기
+        IsStartScreenVisible = true;
+        SelectedCategory = "All";
+
+        // 상태메시지
+        StatusText = "주문 방식 선택 화면으로 돌아갑니다.";
+    }
 }
+
