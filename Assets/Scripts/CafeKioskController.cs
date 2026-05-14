@@ -31,6 +31,7 @@ public sealed class CafeKioskController : MonoBehaviour
     private CafeKioskOrderScreen orderScreenUI;
     private CafeKioskOptionPopup optionPopupUI;
     private CafeKioskPaymentPopup paymentPopupUI;
+    private CafeKioskReceiptPopup receiptPopupUI;
 
     private void OnEnable()
     {
@@ -87,6 +88,14 @@ public sealed class CafeKioskController : MonoBehaviour
             () => RefreshScreens()
         );
 
+        receiptPopupUI = new CafeKioskReceiptPopup(root, viewModel, font, paper, charcoal, sage, espresso, caramel, 
+            () =>
+            {
+                orderScreenUI.RefreshCart();
+                RefreshScreens();
+            }
+        );
+
         RefreshScreens();
     }
 
@@ -94,9 +103,9 @@ public sealed class CafeKioskController : MonoBehaviour
     {
         startScreenUI?.Refresh();
         orderScreenUI?.Refresh();
-        
         optionPopupUI?.Refresh();
         paymentPopupUI?.Refresh();
+        receiptPopupUI?.Refresh();
     }
 
     private void RefreshPayment()
