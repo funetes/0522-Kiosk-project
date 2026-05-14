@@ -19,30 +19,30 @@ public sealed class CafeKioskAdminPopup
 
     private void Build(Transform parent, Color paper, Color charcoal, Color espresso, System.Action onAction)
     {
-        //ÆË¾÷ÀÌ ¶ã ¶§ µŞ¹è°æÀ» ¾îµÓ°Ô µ¤¾îÁÖ´Â ¹İÅõ¸í °ËÀº»ö ¹è°æ
+        //íŒì—…ì´ ëœ° ë•Œ ë’·ë°°ê²½ì„ ì–´ë‘¡ê²Œ ë®ì–´ì£¼ëŠ” ë°˜íˆ¬ëª… ê²€ì€ìƒ‰ ë°°ê²½
         Root = CafeKioskUIUtility.Panel("Admin Overlay", parent, new Color(0f, 0f, 0f, 0.85f));
         CafeKioskUIUtility.Stretch(Root);
         Root.gameObject.SetActive(false);
 
-        //±Û¾¾µéÀÌ ÀûÈú ½ÇÁ¦ ÇÏ¾á»ö ÆË¾÷Ã¢ º»Ã¼
+        //ê¸€ì”¨ë“¤ì´ ì í ì‹¤ì œ í•˜ì–€ìƒ‰ íŒì—…ì°½ ë³¸ì²´
         var modal = CafeKioskUIUtility.Panel("Admin Modal", Root, paper);
         CafeKioskUIUtility.Anchor(modal, 0.2f, 0.15f, 0.8f, 0.85f, 0f, 0f, 0f, 0f);
 
-        //ÆË¾÷Ã¢ ¸Ç À§ÂÊ¿¡ µé¾î°¡´Â "°ü¸®ÀÚ Á¤»ê ÆäÀÌÁö" Á¦¸ñ ÅØ½ºÆ®
-        var title = CafeKioskUIUtility.Label("°ü¸®ÀÚ Á¤»ê ÆäÀÌÁö", modal, 32, charcoal, FontStyle.Bold, TextAnchor.MiddleCenter, font);
+        //íŒì—…ì°½ ë§¨ ìœ„ìª½ì— ë“¤ì–´ê°€ëŠ” "ê´€ë¦¬ì ì •ì‚° í˜ì´ì§€" ì œëª© í…ìŠ¤íŠ¸
+        var title = CafeKioskUIUtility.Label("ê´€ë¦¬ì ì •ì‚° í˜ì´ì§€", modal, 32, charcoal, FontStyle.Bold, TextAnchor.MiddleCenter, font);
         CafeKioskUIUtility.Anchor(title.rectTransform, 0f, 0.82f, 1f, 0.95f, 0f, 0f, 0f, 0f);
 
-        // °áÁ¦¾×, ÃÑ ÁÖ¹® °Ç¼ö, ÄíÆù Â÷°¨ ÃÑ¾×ÀÌ Ç¥½ÃµÉ ÅØ½ºÆ® ¿µ¿ª
+        // ê²°ì œì•¡, ì´ ì£¼ë¬¸ ê±´ìˆ˜, ì¿ í° ì°¨ê° ì´ì•¡ì´ í‘œì‹œë  í…ìŠ¤íŠ¸ ì˜ì—­
         detailsText = CafeKioskUIUtility.Label("", modal, 26, charcoal, FontStyle.Normal, TextAnchor.MiddleCenter, font);
         CafeKioskUIUtility.Anchor(detailsText.rectTransform, 0f, 0.45f, 1f, 0.80f, 0f, 0f, 0f, 0f);
         detailsText.lineSpacing = 1.2f;
 
-        // ½ÇÁ¦ °áÁ¦µÈ ±İ¾×ÀÌ Ç¥½ÃµÉ ÅØ½ºÆ® ¿µ¿ª
+        // ì‹¤ì œ ê²°ì œëœ ê¸ˆì•¡ì´ í‘œì‹œë  í…ìŠ¤íŠ¸ ì˜ì—­
         finalSalesText = CafeKioskUIUtility.Label("", modal, 28, espresso, FontStyle.Bold, TextAnchor.MiddleCenter, font);
         CafeKioskUIUtility.Anchor(finalSalesText.rectTransform, 0f, 0.25f, 1f, 0.45f, 0f, 0f, 0f, 0f);
 
-        // Ã¢À» ´İ´Â '´İ±â' ¹öÆ°
-        var closeBtn = CafeKioskUIUtility.Button("´İ±â", modal, 20, charcoal, Color.white, () => {
+        // ì°½ì„ ë‹«ëŠ” 'ë‹«ê¸°' ë²„íŠ¼
+        var closeBtn = CafeKioskUIUtility.Button("ë‹«ê¸°", modal, 20, charcoal, Color.white, () => {
             Hide();
             onAction?.Invoke();
         }, font, 120f, 50f);
@@ -64,10 +64,10 @@ public sealed class CafeKioskAdminPopup
     {
         if (!Root.gameObject.activeSelf) return;
 
-        detailsText.text = $"°áÁ¦¾× : {CafeKioskViewModel.FormatPrice(viewModel.TotalOriginalSales)}\n" +
-                           $"ÃÑ ÁÖ¹® °Ç¼ö : {viewModel.TotalOrderCount}°Ç\n" +
-                           $"ÄíÆù Â÷°¨ ÃÑ¾× : -{CafeKioskViewModel.FormatPrice(viewModel.TotalDiscountAmount)}";
+        detailsText.text = $"ê²°ì œì•¡ : {CafeKioskViewModel.FormatPrice(viewModel.TotalOriginalSales)}\n" +
+                           $"ì´ ì£¼ë¬¸ ê±´ìˆ˜ : {viewModel.TotalOrderCount}ê±´\n" +
+                           $"ì¿ í° ì°¨ê° ì´ì•¡ : -{CafeKioskViewModel.FormatPrice(viewModel.TotalDiscountAmount)}";
 
-        finalSalesText.text = $"½ÇÁ¦ °áÁ¦µÈ ±İ¾× (ÃÖÁ¾ ½Ç °áÁ¦¾×)\n{CafeKioskViewModel.FormatPrice(viewModel.TotalActualSales)}";
+        finalSalesText.text = $"ì‹¤ì œ ê²°ì œëœ ê¸ˆì•¡ (ìµœì¢… ì‹¤ ê²°ì œì•¡)\n{CafeKioskViewModel.FormatPrice(viewModel.TotalActualSales)}";
     }
 }
