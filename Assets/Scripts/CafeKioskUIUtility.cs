@@ -3,6 +3,8 @@ using UnityEngine.UI;
 
 public static class CafeKioskUIUtility
 {
+    private static readonly Color SelectedBorderColor = new Color(1f, 0.86f, 0.25f);
+
     public static RectTransform Panel(string name, Transform parent, Color color)
     {
         var panel = new GameObject(name, typeof(RectTransform), typeof(Image));
@@ -33,13 +35,17 @@ public static class CafeKioskUIUtility
         return uiText;
     }
 
-    public static Button Button(string text, Transform parent, int size, Color background, Color foreground, UnityEngine.Events.UnityAction action, Font font, float width = 0f, float height = 46f, float anchorX = -1f)
+    public static Button Button(string text, Transform parent, int size, Color background, Color foreground, UnityEngine.Events.UnityAction action, Font font, float width = 0f, float height = 46f, float anchorX = -1f, bool selected = false)
     {
         var buttonRect = Panel($"{text} Button", parent, background);
         buttonRect.sizeDelta = new Vector2(width, height);
 
         var button = buttonRect.gameObject.AddComponent<Button>();
         button.targetGraphic = buttonRect.GetComponent<Image>();
+        if (selected)
+        {
+            AddSelectedBorder(button, true);
+        }
         button.onClick.AddListener(action);
 
         var label = Label(text, buttonRect, size, foreground, FontStyle.Bold, TextAnchor.MiddleCenter, font);
@@ -51,6 +57,42 @@ public static class CafeKioskUIUtility
         }
 
         return button;
+    }
+
+    public static void SetSelected(Button button, bool selected)
+    {
+        if (button == null) return;
+
+        var outline = button.GetComponent<Outline>();
+        if (outline == null)
+        {
+            outline = AddSelectedBorder(button, false);
+        }
+
+        outline.enabled = selected;
+    }
+
+    public static void SetSelectedInGroup(Button selectedButton, params Button[] buttons)
+    {
+        foreach (var button in buttons)
+        {
+            SetSelected(button, button == selectedButton);
+        }
+    }
+
+    private static Outline AddSelectedBorder(Button button, bool selected)
+    {
+        var outline = button.GetComponent<Outline>();
+        if (outline == null)
+        {
+            outline = button.gameObject.AddComponent<Outline>();
+            outline.effectColor = SelectedBorderColor;
+            outline.effectDistance = new Vector2(4f, -4f);
+            outline.useGraphicAlpha = false;
+        }
+
+        outline.enabled = selected;
+        return outline;
     }
 
     public static InputField Input(string placeholder, Transform parent, Color charcoal, Font font)
