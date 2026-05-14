@@ -76,7 +76,10 @@ public sealed class CafeKioskOrderScreen
             CafeKioskUIUtility.Button(CafeKioskViewModel.CategoryLabel(category), categories, 18, caramel, Color.white, () =>
             {
                 viewModel.SelectCategory(captured); // 뷰모델 상태 변경
-                RefreshMenu(onAction);               // 해당 카테고리 메뉴로 갱신
+                RefreshMenu(onAction);
+                RefreshCart();
+                Refresh();
+                onAction?.Invoke();// 해당 카테고리 메뉴로 갱신
             }, font, 116f);
         }
 
